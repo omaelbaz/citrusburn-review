@@ -50,17 +50,15 @@ const C = {
 // ---------------------------------------------------------------------------
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; overflow-x: hidden; max-width: 100%; }
     body {
       background: #F9FAFB; color: #374151;
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-inter, 'Inter', system-ui, sans-serif);
       -webkit-font-smoothing: antialiased; line-height: 1.6;
       overflow-x: hidden; max-width: 100%;
     }
-    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; color: #111827; line-height: 1.2; }
+    h1,h2,h3,h4 { font-family: var(--font-montserrat, 'Montserrat', system-ui, sans-serif); color: #111827; line-height: 1.2; }
     a { text-decoration: none; }
     button { font-family: inherit; }
     img { max-width: 100%; display: block; }
@@ -118,7 +116,7 @@ const GlobalStyles = () => (
     .btn-orange {
       display: inline-block;
       background: #FF8C00; color: #fff;
-      font-family: 'Montserrat', sans-serif; font-weight: 800;
+      font-family: var(--font-montserrat, 'Montserrat', system-ui, sans-serif); font-weight: 800;
       letter-spacing: .04em; text-transform: uppercase;
       border: none; cursor: pointer; border-radius: 10px;
       transition: background .18s, transform .15s, box-shadow .15s;
@@ -129,8 +127,58 @@ const GlobalStyles = () => (
     .btn-orange:active { transform: translateY(0); }
 
     /* ─────────────── NAV ─────────────── */
-    .nav-links { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
-    @media (max-width: 639px) { .nav-links a:not(.btn-orange) { display: none; } }
+    .site-nav {
+      background: #fff; border-bottom: 1px solid #E5E7EB;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+      position: relative; z-index: 100;
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; height: 64px; padding: 0 16px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    @media (min-width: 640px) { .nav-inner { padding: 0 24px; } }
+    @media (min-width: 1024px) { .nav-inner { padding: 0 48px; } }
+
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+
+    /* Hamburger button — hidden on desktop */
+    .nav-hamburger {
+      display: none; flex-direction: column; justify-content: center;
+      gap: 5px; background: none; border: none; cursor: pointer;
+      padding: 8px 6px; border-radius: 8px; flex-shrink: 0;
+    }
+    .ham-line {
+      display: block; width: 22px; height: 2px;
+      background: #374151; border-radius: 2px;
+      transition: transform .25s ease, opacity .2s ease;
+    }
+    /* Animate to X when open */
+    .nav-hamburger.is-open .ham-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-hamburger.is-open .ham-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-hamburger.is-open .ham-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile drawer — hidden by default */
+    .nav-drawer {
+      display: none; flex-direction: column;
+      background: #fff; border-top: 1px solid #E5E7EB;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 8px 16px 20px;
+    }
+    .nav-drawer.is-open { display: flex; }
+    .nav-drawer a {
+      color: #374151; font-size: 1rem; font-weight: 600;
+      padding: 14px 0; border-bottom: 1px solid #F3F4F6;
+      display: block;
+    }
+    .nav-drawer a:last-of-type { border-bottom: none; }
+    .nav-drawer-cta { padding-top: 16px; }
+
+    /* At ≤768px: hide desktop links, show hamburger */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+    }
 
     /* ─────────────── HERO ─────────────── */
     .hero-sec {
@@ -410,6 +458,7 @@ function StickyBar() {
 // NAV
 // ---------------------------------------------------------------------------
 function Nav() {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <nav style={{ background: C.bgWhite, borderBottom: `1px solid ${C.border}`,
       padding: '12px 16px', marginTop: '40px',
@@ -418,11 +467,31 @@ function Nav() {
         justifyContent: 'space-between', gap: '12px' }}>
         <img src={IMG('logo.png')} alt="CitrusBurn™" style={{ height: '36px', width: 'auto' }}
           onError={(e) => imgFallback(e, 150, 36, 'CitrusBurn', 'ffffff', 'FF8C00')} />
+        
         <div className="nav-links">
           {[['#free-bonuses','Bonuses'],['#about','Science'],['#ingredients','Ingredients'],['#faq','FAQ']].map(([href,label]) => (
             <a key={href} href={href} style={{ color: C.textMuted, fontSize: '0.875rem', fontWeight: 500 }}>{label}</a>
           ))}
           <CTAButton label="ORDER NOW" pad="8px 18px" fs="0.78rem" />
+        </div>
+
+        <button 
+          className={`nav-hamburger ${isOpen ? 'is-open' : ''}`}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label="Toggle menu"
+        >
+          <span className="ham-line"></span>
+          <span className="ham-line"></span>
+          <span className="ham-line"></span>
+        </button>
+      </div>
+
+      <div className={`nav-drawer ${isOpen ? 'is-open' : ''}`}>
+        {[['#free-bonuses','Bonuses'],['#about','Science'],['#ingredients','Ingredients'],['#faq','FAQ']].map(([href,label]) => (
+          <a key={href} href={href} onClick={() => setIsOpen(false)} style={{ color: C.textDark }}>{label}</a>
+        ))}
+        <div className="nav-drawer-cta">
+          <CTAButton label="ORDER NOW" pad="12px" fs="0.9rem" full />
         </div>
       </div>
     </nav>
@@ -1176,7 +1245,6 @@ function Footer() {
 export default function CitrusBurnReview() {
   return (
     <>
-      <GlobalStyles />
       <StickyBar />
       <Nav />
       <main style={{ overflowX: 'hidden', width: '100%' }}>
