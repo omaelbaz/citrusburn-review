@@ -65,7 +65,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="theme-color" content="#FF8C00" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body style={{ margin: 0, padding: 0, background: '#0a0a0a' }}>

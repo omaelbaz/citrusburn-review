@@ -6,41 +6,55 @@ import React, { useState, useEffect } from 'react';
 // CONSTANTS
 // ---------------------------------------------------------------------------
 const AFFILIATE_LINK = 'https://d2dc49u948m5po32yfulzx1o0m.hop.clickbank.net';
-const TIMER_MINUTES = 9;
-const TIMER_SECONDS = 59;
+const TIMER_MINUTES  = 9;
+const TIMER_SECONDS  = 59;
 
-// Local image helper — images must be in /public
 const IMG = (file: string) => `/${file}`;
 
-// Placehold.co fallback on broken images
-function imgError(
+function imgFallback(
   e: React.SyntheticEvent<HTMLImageElement>,
-  w: number,
-  h: number,
-  label = '',
-  bg = '1a1a1a',
-  fg = 'd4a017'
+  w: number, h: number,
+  label = '', bg = 'f0f0f0', fg = '374151'
 ) {
   (e.target as HTMLImageElement).src =
     `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(label || ' ')}`;
 }
 
 // ---------------------------------------------------------------------------
-// DESIGN TOKENS
+// DESIGN TOKENS — Clean Light Mode
 // ---------------------------------------------------------------------------
 const C = {
-  bgPrimary:   '#0a0a0a',
-  bgCard:      '#111111',
-  bgElevated:  '#1a1a1a',
-  orange:      '#f97316',
-  orangeHover: '#ea6c0a',
-  gold:        '#d4a017',
-  goldLight:   '#f0c040',
-  textPrimary: '#f5f5f5',
-  textMuted:   '#a8a29e',
-  border:      '#2a2a2a',
-  red:         '#ef4444',
-  green:       '#22c55e',
+  // Backgrounds
+  bgPage:    '#F9FAFB',
+  bgWhite:   '#FFFFFF',
+  bgSoft:    '#FFF7ED',   // warm tint under hero / pricing
+  bgGreen:   '#F0FDF4',   // pale green tint
+  bgOrange:  '#FFF7ED',
+  bgGray:    '#F3F4F6',
+
+  // Brand
+  orange:    '#FF8C00',
+  orangeD:   '#E07800',
+  orangeL:   '#FFA833',
+  green:     '#4CAF50',
+  greenD:    '#388E3C',
+  greenL:    '#E8F5E9',
+
+  // Text
+  textDark:  '#111827',
+  textBody:  '#374151',
+  textMuted: '#6B7280',
+  textLight: '#9CA3AF',
+
+  // Borders
+  border:    '#E5E7EB',
+  borderOr:  '#FDBA74',
+  borderGr:  '#86EFAC',
+
+  // Shadows
+  shadow:    '0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06)',
+  shadowMd:  '0 4px 6px rgba(0,0,0,0.05), 0 10px 30px rgba(0,0,0,0.08)',
+  shadowOr:  '0 4px 20px rgba(255,140,0,0.18)',
 };
 
 // ---------------------------------------------------------------------------
@@ -48,96 +62,140 @@ const C = {
 // ---------------------------------------------------------------------------
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
-    *, *::before, *::after { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { background: #0a0a0a; color: #f5f5f5; font-family: 'Inter', sans-serif; margin: 0; }
 
-    /* ---------- animations ---------- */
-    @keyframes pulse-dot   { 0%,100%{opacity:1} 50%{opacity:0.25} }
-    @keyframes ticker-blink{ 0%,100%{opacity:1} 50%{opacity:0.55} }
-    @keyframes glow-pulse  { 0%,100%{box-shadow:0 0 20px rgba(249,115,22,.35)} 50%{box-shadow:0 0 44px rgba(249,115,22,.8)} }
-    @keyframes gold-glow   { 0%,100%{box-shadow:0 0 28px rgba(212,160,23,.3), 0 0 64px rgba(212,160,23,.1)} 50%{box-shadow:0 0 48px rgba(212,160,23,.55), 0 0 100px rgba(212,160,23,.18)} }
-    @keyframes badge-pop   { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.06)} }
-    @keyframes shimmer     { 0%{background-position:-200% center} 100%{background-position:200% center} }
-
-    .pulse-dot    { animation: pulse-dot    1.2s ease-in-out infinite; }
-    .ticker-blink { animation: ticker-blink 1.5s ease-in-out infinite; }
-    .glow-btn     { animation: glow-pulse   2s   ease-in-out infinite; }
-    .gold-glow    { animation: gold-glow    2.5s ease-in-out infinite; }
-
-    .shimmer-text {
-      background: linear-gradient(90deg,#d4a017 0%,#f0c040 40%,#d4a017 60%,#f0c040 100%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 3s linear infinite;
+    body {
+      background: #F9FAFB;
+      color: #374151;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
     }
 
-    /* ---------- sticky bar ---------- */
+    h1,h2,h3,h4 {
+      font-family: 'Montserrat', sans-serif;
+      color: #111827;
+      line-height: 1.2;
+    }
+
+    a { text-decoration: none; }
+    button { font-family: inherit; }
+    img { max-width: 100%; }
+
+    /* ── Sticky bar ── */
     .sticky-bar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      background: rgba(10,10,10,0.97);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom: 1px solid #d4a017;
-      padding: 7px 20px;               /* slim — non-intrusive */
+      background: #fff;
+      border-bottom: 2px solid #FF8C00;
+      box-shadow: 0 2px 12px rgba(255,140,0,.12);
+      padding: 8px 20px;
     }
 
-    /* ---------- buttons ---------- */
-    .btn-primary {
+    /* ── Buttons ── */
+    .btn-orange {
       display: inline-block;
-      background: linear-gradient(135deg, #f97316 0%, #d4a017 100%);
-      color: #fff; font-weight: 800; letter-spacing: .06em;
-      text-transform: uppercase; border: none; cursor: pointer;
-      text-decoration: none; text-align: center;
-      transition: transform .15s, box-shadow .15s;
+      background: #FF8C00;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background .18s, transform .15s, box-shadow .15s;
+      text-align: center;
+      text-decoration: none;
     }
-    .btn-primary:hover  { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(249,115,22,.55); }
-    .btn-primary:active { transform: translateY(0); }
+    .btn-orange:hover {
+      background: #E07800;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(255,140,0,.35);
+    }
+    .btn-orange:active { transform: translateY(0); }
 
-    /* ---------- pricing card hover ---------- */
+    .btn-outline {
+      display: inline-block;
+      background: transparent;
+      color: #FF8C00;
+      border: 2px solid #FF8C00;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      border-radius: 8px;
+      padding: 8px 20px;
+      transition: all .18s;
+      text-decoration: none;
+    }
+    .btn-outline:hover { background: #FF8C00; color: #fff; }
+
+    /* ── Pricing card ── */
     .pricing-card {
-      transition: transform .25s ease, box-shadow .25s ease;
+      background: #fff;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      transition: transform .22s ease, box-shadow .22s ease;
     }
     .pricing-card:hover {
-      transform: scale(1.05);
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.1);
     }
     .pricing-card-best {
-      border: 2px solid #d4a017 !important;
-      transform: scale(1.03);
+      border: 2.5px solid #FF8C00 !important;
+      box-shadow: 0 4px 24px rgba(255,140,0,.16) !important;
     }
-    .pricing-card-best:hover { transform: scale(1.07); }
+    .pricing-card-best:hover {
+      box-shadow: 0 14px 48px rgba(255,140,0,.24) !important;
+    }
 
-    /* ---------- glassmorphism ingredient cards ---------- */
-    .glass-card {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(212,160,23,0.18);
+    /* ── Ingredient card ── */
+    .ingredient-card {
+      background: #fff;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 16px;
       transition: border-color .2s, transform .2s, box-shadow .2s;
     }
-    .glass-card:hover {
-      border-color: rgba(249,115,22,0.5);
+    .ingredient-card:hover {
+      border-color: #FF8C00;
       transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(249,115,22,0.12);
+      box-shadow: 0 8px 24px rgba(255,140,0,.1);
     }
 
-    /* ---------- FAQ ---------- */
+    /* ── FAQ ── */
     .faq-answer {
       max-height: 0; overflow: hidden;
-      transition: max-height .35s ease, padding .35s ease;
+      transition: max-height .35s ease, padding .3s ease;
     }
-    .faq-answer.open { max-height: 600px; }
+    .faq-answer.open { max-height: 500px; }
 
-    /* ---------- responsive ---------- */
+    /* ── Animations ── */
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.25} }
+    @keyframes ticker    { 0%,100%{opacity:1} 50%{opacity:.5}  }
+    @keyframes float-up  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes badge-pop { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.05)} }
+
+    .pulse-dot   { animation: pulse-dot 1.2s ease-in-out infinite; }
+    .ticker-blink{ animation: ticker    1.5s ease-in-out infinite; }
+
+    /* ── Section divider ── */
+    .divider {
+      width: 60px; height: 4px;
+      background: linear-gradient(90deg,#FF8C00,#4CAF50);
+      border-radius: 2px; margin: 16px auto 0;
+    }
+
+    /* ── Responsive ── */
     @media (max-width: 768px) {
       .hide-mobile { display: none !important; }
       .show-mobile { display: block !important; }
-      .pricing-card-best { transform: scale(1); }
-      .pricing-card-best:hover { transform: scale(1.03); }
+      .pricing-card-best { transform: none !important; }
     }
     @media (min-width: 769px) {
       .show-mobile { display: none !important; }
@@ -148,85 +206,90 @@ const GlobalStyles = () => (
 // ---------------------------------------------------------------------------
 // COUNTDOWN HOOK
 // ---------------------------------------------------------------------------
-function useCountdown(initMin: number, initSec: number) {
-  const total = initMin * 60 + initSec;
+function useCountdown(m: number, s: number) {
+  const total = m * 60 + s;
   const [secs, setSecs] = useState(total);
   useEffect(() => {
-    const id = setInterval(() => setSecs((s) => (s <= 1 ? total : s - 1)), 1000);
+    const id = setInterval(() => setSecs((x) => (x <= 1 ? total : x - 1)), 1000);
     return () => clearInterval(id);
   }, [total]);
-  return `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`;
+  return `${String(Math.floor(secs / 60)).padStart(2,'0')}:${String(secs % 60).padStart(2,'0')}`;
 }
 
 // ---------------------------------------------------------------------------
-// SHARED COMPONENTS
+// SHARED PRIMITIVES
 // ---------------------------------------------------------------------------
-function Stars({ count = 5 }: { count?: number }) {
+function Stars({ n = 5, size = '1rem' }: { n?: number; size?: string }) {
   return (
-    <span style={{ color: C.gold, fontSize: '1rem', letterSpacing: '2px' }}>
-      {'★'.repeat(count)}{'☆'.repeat(5 - count)}
+    <span style={{ color: '#F59E0B', fontSize: size, letterSpacing: '1px' }}>
+      {'★'.repeat(n)}{'☆'.repeat(5 - n)}
     </span>
   );
 }
 
-function CTAButton({ label = 'BUY NOW', size = 'md' }: { label?: string; size?: 'sm' | 'md' | 'lg' }) {
-  const pad  = size === 'lg' ? '18px 52px' : size === 'sm' ? '9px 22px' : '13px 36px';
-  const fs   = size === 'lg' ? '1.15rem'   : size === 'sm' ? '0.82rem'  : '0.95rem';
+function Tag({ children, color = C.orange }: { children: React.ReactNode; color?: string }) {
+  const isOrange = color === C.orange;
   return (
-    <a
-      href={AFFILIATE_LINK}
-      className="btn-primary glow-btn"
-      style={{ padding: pad, fontSize: fs, borderRadius: '8px' }}
-      rel="nofollow noopener"
-      target="_blank"
-    >
-      {label} →
-    </a>
-  );
-}
-
-function SectionTag({ children, color = C.gold }: { children: React.ReactNode; color?: string }) {
-  return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px',
-      background: `rgba(${color === C.gold ? '212,160,23' : '249,115,22'},.1)`,
-      border: `1px solid ${color}40`, borderRadius: '100px', padding: '5px 16px', marginBottom: '14px' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px',
+      background: isOrange ? '#FFF7ED' : '#F0FDF4',
+      border: `1.5px solid ${isOrange ? '#FDBA74' : '#86EFAC'}`,
+      borderRadius: '100px', padding: '5px 16px', marginBottom: '14px' }}>
       <span style={{ color, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '.1em' }}>{children}</span>
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionHeading({ children, sub }: { children: React.ReactNode; sub?: string }) {
   return (
-    <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.6rem,4vw,2.4rem)',
-      fontWeight: 900, color: C.textPrimary, marginBottom: '10px', lineHeight: 1.2 }}>
-      {children}
-    </h2>
+    <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+      <h2 style={{ fontSize: 'clamp(1.7rem,4vw,2.4rem)', fontWeight: 900,
+        color: C.textDark, marginBottom: sub ? '12px' : 0 }}>{children}</h2>
+      <div className="divider" />
+      {sub && <p style={{ color: C.textMuted, marginTop: '16px', fontSize: '1.05rem',
+        maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>{sub}</p>}
+    </div>
+  );
+}
+
+function CTAButton({ label = 'ORDER NOW', size = 'md', full = false }: {
+  label?: string; size?: 'sm'|'md'|'lg'; full?: boolean;
+}) {
+  const pad = size === 'lg' ? '18px 52px' : size === 'sm' ? '9px 22px' : '13px 36px';
+  const fs  = size === 'lg' ? '1.1rem'   : size === 'sm' ? '0.8rem'   : '0.9rem';
+  return (
+    <a href={AFFILIATE_LINK} className="btn-orange"
+      style={{ padding: pad, fontSize: fs, display: full ? 'block' : 'inline-block',
+        width: full ? '100%' : undefined }}
+      rel="nofollow noopener" target="_blank">
+      {label} →
+    </a>
   );
 }
 
 // ---------------------------------------------------------------------------
-// STICKY ORDER BAR — slim, non-intrusive
+// STICKY BAR
 // ---------------------------------------------------------------------------
-function StickyOrderBar() {
+function StickyBar() {
   const timer = useCountdown(TIMER_MINUTES, TIMER_SECONDS);
   return (
     <div className="sticky-bar">
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex',
         alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span className="pulse-dot" style={{ width: '7px', height: '7px', borderRadius: '50%',
-            background: C.red, display: 'inline-block', flexShrink: 0 }} />
-          <span style={{ color: C.textMuted, fontSize: '0.75rem' }}>SALE ENDS:</span>
+          <span className="pulse-dot" style={{ width: '8px', height: '8px', borderRadius: '50%',
+            background: '#EF4444', display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ color: C.textBody, fontSize: '0.8rem', fontWeight: 600 }}>
+            LIMITED OFFER ENDS IN:
+          </span>
           <span className="ticker-blink" style={{ color: C.orange, fontWeight: 800,
-            fontSize: '0.9rem', fontFamily: 'monospace' }}>{timer}</span>
-          <span className="hide-mobile" style={{ color: C.textMuted, fontSize: '0.75rem' }}>
-            &nbsp;· 🔥 75% OFF + Free Shipping on 6-Pack · Stock:&nbsp;
-            <span style={{ color: C.red, fontWeight: 700 }}>LOW</span>
+            fontSize: '0.95rem', fontFamily: 'monospace' }}>{timer}</span>
+          <span className="hide-mobile" style={{ color: C.textMuted, fontSize: '0.8rem' }}>
+            &nbsp;· 🔥 Save 75% + Free Shipping on 6-Bottle Pack
           </span>
         </div>
-        <a href={AFFILIATE_LINK} className="btn-primary"
-          style={{ padding: '7px 18px', fontSize: '0.78rem', borderRadius: '6px', flexShrink: 0 }}
-          rel="nofollow noopener" target="_blank">ORDER NOW →</a>
+        <a href={AFFILIATE_LINK} className="btn-orange"
+          style={{ padding: '7px 20px', fontSize: '0.8rem', flexShrink: 0 }}
+          rel="nofollow noopener" target="_blank">CLAIM DEAL →</a>
       </div>
     </div>
   );
@@ -237,20 +300,24 @@ function StickyOrderBar() {
 // ---------------------------------------------------------------------------
 function Nav() {
   return (
-    <nav style={{ background: C.bgPrimary, borderBottom: `1px solid ${C.border}`,
-      padding: '12px 20px', marginTop: '40px' }}>
+    <nav style={{ background: C.bgWhite, borderBottom: `1px solid ${C.border}`,
+      padding: '14px 20px', marginTop: '42px',
+      boxShadow: '0 1px 4px rgba(0,0,0,.04)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex',
         alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <img src={IMG('logo.png')} alt="CitrusBurn™" style={{ height: '38px' }}
-          onError={(e) => imgError(e, 160, 38, 'CitrusBurn', '0a0a0a', 'd4a017')} />
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {[['#free-bonuses','Free Bonuses'],['#about','About'],['#ingredients','Ingredients'],['#faq','FAQ']].map(([href,label]) => (
+          onError={(e) => imgFallback(e, 160, 38, 'CitrusBurn', 'ffffff', 'FF8C00')} />
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {[['#free-bonuses','Bonuses'],['#about','Science'],['#ingredients','Ingredients'],['#faq','FAQ']].map(([href,label]) => (
             <a key={href} href={href}
-              style={{ color: C.textMuted, fontSize: '0.85rem', textDecoration: 'none' }}>{label}</a>
+              style={{ color: C.textMuted, fontSize: '0.875rem', fontWeight: 500,
+                transition: 'color .15s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = C.orange)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = C.textMuted)}>
+              {label}
+            </a>
           ))}
-          <a href={AFFILIATE_LINK} className="btn-primary"
-            style={{ padding: '8px 18px', fontSize: '0.78rem', borderRadius: '6px' }}
-            rel="nofollow noopener" target="_blank">ORDER NOW</a>
+          <CTAButton label="ORDER NOW" size="sm" />
         </div>
       </div>
     </nav>
@@ -262,88 +329,95 @@ function Nav() {
 // ---------------------------------------------------------------------------
 function HeroSection() {
   return (
-    <section style={{ background: 'linear-gradient(180deg,#0a0a0a 0%,#0f0a04 50%,#0a0a0a 100%)',
-      padding: '96px 20px 72px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-      {/* Ambient glow */}
-      <div style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)',
-        width: '700px', height: '320px', pointerEvents: 'none',
-        background: 'radial-gradient(ellipse,rgba(249,115,22,.07) 0%,transparent 70%)' }} />
+    <section style={{ background: 'linear-gradient(160deg, #FFFBF5 0%, #F9FAFB 60%, #F0FDF4 100%)',
+      padding: '96px 20px 80px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
 
-      <div style={{ maxWidth: '900px', margin: '0 auto', position: 'relative' }}>
-        <SectionTag color={C.gold}>APRIL 2026 · NEW SCIENTIFIC BREAKTHROUGH</SectionTag>
+      {/* Decorative circles */}
+      <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '380px', height: '380px',
+        borderRadius: '50%', background: 'rgba(255,140,0,.05)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-60px', left: '-60px', width: '280px', height: '280px',
+        borderRadius: '50%', background: 'rgba(76,175,80,.05)', pointerEvents: 'none' }} />
 
-        <h1 style={{ fontFamily: "'Playfair Display', serif",
-          fontSize: 'clamp(2rem,5vw,3.6rem)', fontWeight: 900, lineHeight: 1.12,
-          color: C.textPrimary, marginBottom: '18px' }}>
+      <div style={{ maxWidth: '920px', margin: '0 auto', position: 'relative' }}>
+        <Tag>APRIL 2026 · HARVARD & BARCELONA BREAKTHROUGH</Tag>
+
+        <h1 style={{ fontSize: 'clamp(2.2rem,5.5vw,3.8rem)', fontWeight: 900,
+          color: C.textDark, marginBottom: '20px', lineHeight: 1.1 }}>
           The Citrus Secret{' '}
-          <span className="shimmer-text">Everyone&rsquo;s Talking About!</span>
+          <span style={{ color: C.orange }}>Everyone&rsquo;s</span>{' '}
+          Talking About
         </h1>
 
-        <p style={{ fontSize: 'clamp(1.05rem,2.5vw,1.35rem)', color: C.textMuted,
-          marginBottom: '28px', maxWidth: '660px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.7 }}>
-          Burn More. Crave Less. Feel Great All Day with CitrusBurn™.
-          <br />
-          <span style={{ color: C.textPrimary, fontWeight: 600 }}>
-            Harvard &amp; Barcelona researchers revealed why diets fail after 35 —
+        <p style={{ fontSize: 'clamp(1.05rem,2.5vw,1.25rem)', color: C.textBody,
+          maxWidth: '640px', margin: '0 auto 32px', lineHeight: 1.75 }}>
+          Burn More. Crave Less. Feel Great All Day with CitrusBurn™.{' '}
+          <strong style={{ color: C.textDark }}>
+            Harvard & Barcelona researchers finally revealed why diets fail after 35 —
             and the 7-botanical fix that changes everything.
-          </span>
+          </strong>
         </p>
 
+        {/* Rating */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '10px', marginBottom: '28px' }}>
-          <Stars />
-          <span style={{ color: C.textMuted, fontSize: '0.88rem' }}>
-            4.9/5 · <strong style={{ color: C.textPrimary }}>73,000+</strong> Verified Reviews
+          gap: '10px', marginBottom: '36px' }}>
+          <Stars n={5} size="1.15rem" />
+          <span style={{ color: C.textBody, fontSize: '0.9rem' }}>
+            <strong>4.9/5</strong> · 73,000+ Verified Reviews
           </span>
         </div>
 
         {/* Product image */}
-        <div style={{ marginBottom: '36px' }}>
+        <div style={{ marginBottom: '40px' }}>
           <img src={IMG('s6prd.png')} alt="CitrusBurn™ 6-Bottle Pack"
-            style={{ maxWidth: '500px', width: '100%', height: 'auto', margin: '0 auto', display: 'block' }}
-            onError={(e) => imgError(e, 500, 380, 'CitrusBurn Product', '0f0a04', 'f97316')} />
+            style={{ maxWidth: '480px', width: '100%', height: 'auto',
+              margin: '0 auto', display: 'block', filter: 'drop-shadow(0 20px 40px rgba(255,140,0,.15))' }}
+            onError={(e) => imgFallback(e, 480, 340, 'CitrusBurn Product', 'FFF7ED', 'FF8C00')} />
         </div>
 
-        {/* Micro testimonials */}
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '40px' }}>
+        {/* Social proof micro-quotes */}
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center',
+          flexWrap: 'wrap', marginBottom: '44px' }}>
           {[
-            { q: 'I can actually see the results! Finally something that actually works!', name: 'Joanne P.' },
-            { q: "More energy, better sleep, and I didn't change my diet.", name: 'Sam L.' },
+            { q: 'I can actually see the results! Finally something that works!', name: 'Joanne P.' },
+            { q: "More energy, better sleep — and I didn't change my diet.", name: 'Sam L.' },
           ].map((t) => (
-            <div key={t.name} style={{ background: C.bgCard, border: `1px solid ${C.border}`,
-              borderRadius: '12px', padding: '16px 20px', maxWidth: '320px', textAlign: 'left' }}>
-              <Stars />
-              <p style={{ color: C.textPrimary, fontSize: '0.875rem', margin: '8px 0 4px', fontStyle: 'italic' }}>
-                &ldquo;{t.q}&rdquo;
-              </p>
-              <span style={{ color: C.orange, fontSize: '0.78rem', fontWeight: 600 }}>
+            <div key={t.name} style={{ background: C.bgWhite, border: `1.5px solid ${C.border}`,
+              borderRadius: '14px', padding: '18px 22px', maxWidth: '310px', textAlign: 'left',
+              boxShadow: C.shadow }}>
+              <Stars n={5} size="0.9rem" />
+              <p style={{ color: C.textBody, fontSize: '0.875rem', margin: '8px 0 6px',
+                fontStyle: 'italic', lineHeight: 1.6 }}>&ldquo;{t.q}&rdquo;</p>
+              <span style={{ color: C.orange, fontSize: '0.78rem', fontWeight: 700 }}>
                 — {t.name} · Verified Buyer
               </span>
             </div>
           ))}
         </div>
 
-        {/* Hero CTA — centered, orange/gold gradient */}
+        {/* Hero CTA */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
           <CTAButton label="CLAIM YOUR DISCOUNTED CITRUSBURN™ TODAY" size="lg" />
-          <p style={{ color: C.textMuted, fontSize: '0.78rem', margin: 0 }}>
-            🔒 Secure Checkout · 180-Day Money-Back Guarantee · One-Time Payment
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap',
+            justifyContent: 'center' }}>
+            {['🔒 Secure Checkout','180-Day Guarantee','No Subscription'].map((t) => (
+              <span key={t} style={{ color: C.textMuted, fontSize: '0.8rem', display: 'flex',
+                alignItems: 'center', gap: '4px' }}>{t}</span>
+            ))}
+          </div>
         </div>
 
         {/* Press logos */}
-        <div style={{ marginTop: '56px', opacity: 0.55 }}>
-          <p style={{ color: C.textMuted, fontSize: '0.7rem', letterSpacing: '.12em', marginBottom: '14px' }}>
-            AS FEATURED IN
-          </p>
-          <img src={IMG('s11logos.png')} alt="Featured in press" className="hide-mobile"
-            style={{ maxWidth: '540px', width: '100%', height: 'auto', margin: '0 auto', display: 'block',
-              filter: 'grayscale(100%) brightness(1.8)' }}
-            onError={(e) => imgError(e, 540, 60, 'Forbes · WebMD · HealthLine · PubMed · BBC', '0a0a0a', '5a5a5a')} />
-          <img src={IMG('s11logos-mob.png')} alt="Featured in press" className="show-mobile"
+        <div style={{ marginTop: '60px', paddingTop: '36px', borderTop: `1px solid ${C.border}` }}>
+          <p style={{ color: C.textLight, fontSize: '0.72rem', letterSpacing: '.14em',
+            fontWeight: 600, marginBottom: '16px', textTransform: 'uppercase' }}>As Featured In</p>
+          <img src={IMG('s11logos.png')} alt="As featured in press" className="hide-mobile"
+            style={{ maxWidth: '520px', width: '100%', height: 'auto', margin: '0 auto', display: 'block',
+              filter: 'grayscale(100%) opacity(0.4)' }}
+            onError={(e) => imgFallback(e, 520, 56, 'Forbes · WebMD · Healthline · PubMed · BBC', 'F9FAFB', '9CA3AF')} />
+          <img src={IMG('s11logos-mob.png')} alt="As featured in press" className="show-mobile"
             style={{ maxWidth: '100%', height: 'auto', margin: '0 auto', display: 'block',
-              filter: 'grayscale(100%) brightness(1.8)' }}
-            onError={(e) => imgError(e, 340, 60, 'Forbes · WebMD · HealthLine · PubMed', '0a0a0a', '5a5a5a')} />
+              filter: 'grayscale(100%) opacity(0.4)' }}
+            onError={(e) => imgFallback(e, 320, 48, 'Forbes · WebMD · Healthline · PubMed', 'F9FAFB', '9CA3AF')} />
         </div>
       </div>
     </section>
@@ -356,31 +430,27 @@ function HeroSection() {
 function UrgencyBanner() {
   const timer = useCountdown(TIMER_MINUTES, TIMER_SECONDS);
   return (
-    <section style={{ background: 'linear-gradient(90deg,#1a0800,#2d1200,#1a0800)',
-      borderTop: 'solid 1px rgba(249,115,22,.3)', borderBottom: 'solid 1px rgba(249,115,22,.3)',
-      padding: '18px 20px' }}>
+    <div style={{ background: C.orange, padding: '14px 20px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', gap: '32px', flexWrap: 'wrap', textAlign: 'center' }}>
+        alignItems: 'center', justifyContent: 'center', gap: '32px',
+        flexWrap: 'wrap', textAlign: 'center' }}>
         {[
-          { label: 'SALE STATUS',        value: 'LIVE',  color: C.green,  icon: '●', anim: 'pulse-dot'    },
-          { label: 'STOCK LEVEL',        value: 'LOW',   color: C.red,    icon: '⚠', anim: ''             },
-          { label: 'SPOT RESERVED FOR',  value: timer,   color: C.orange, icon: '⏱', anim: 'ticker-blink' },
+          { label: 'SALE STATUS',      value: 'LIVE',  accent: '#FFF', sub: '#FFE0A0' },
+          { label: 'STOCK LEVEL',      value: 'LOW',   accent: '#FFF', sub: '#FFE0A0' },
+          { label: 'RESERVED FOR',     value: timer,   accent: '#FFF', sub: '#FFE0A0', mono: true },
         ].map((item) => (
-          <div key={item.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-            <span style={{ color: C.textMuted, fontSize: '0.62rem', letterSpacing: '.12em', fontWeight: 700 }}>
-              {item.label}
+          <div key={item.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ color: 'rgba(255,255,255,.75)', fontSize: '0.62rem',
+              letterSpacing: '.14em', fontWeight: 700 }}>{item.label}</span>
+            <span className={item.mono ? 'ticker-blink' : ''}
+              style={{ color: '#fff', fontWeight: 900, fontSize: '1.15rem',
+                fontFamily: item.mono ? 'monospace' : 'Montserrat, sans-serif' }}>
+              {item.value}
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className={item.anim} style={{ color: item.color, fontSize: '0.85rem' }}>{item.icon}</span>
-              <span style={{ color: item.color, fontWeight: 800, fontSize: '1.1rem',
-                fontFamily: item.label === 'SPOT RESERVED FOR' ? 'monospace' : 'inherit' }}>
-                {item.value}
-              </span>
-            </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -388,85 +458,83 @@ function UrgencyBanner() {
 // PRICING CARD
 // ---------------------------------------------------------------------------
 function PricingCard({ label, bottles, duration, perBottle, total, originalTotal,
-  savings, bonuses, freeShip, highlighted, packageImg }: {
-  label: string; bottles: number; duration: string; perBottle: number; total: number;
-  originalTotal: number; savings: number; bonuses: boolean; freeShip: boolean;
-  highlighted?: boolean; packageImg: string;
+  savings, bonuses, freeShip, best, packageImg }: {
+  label: string; bottles: number; duration: string; perBottle: number;
+  total: number; originalTotal: number; savings: number;
+  bonuses: boolean; freeShip: boolean; best?: boolean; packageImg: string;
 }) {
   return (
-    <div
-      className={`pricing-card ${highlighted ? 'pricing-card-best gold-glow' : ''}`}
-      style={{
-        background: highlighted ? 'linear-gradient(180deg,#1c1100,#111111)' : C.bgCard,
-        border: highlighted ? `2px solid ${C.gold}` : `1px solid ${C.border}`,
-        borderRadius: '18px', padding: '32px 24px',
-        flex: '1 1 280px', maxWidth: '340px', position: 'relative',
-      }}
-    >
-      {highlighted && (
-        <div style={{ position: 'absolute', top: '-13px', left: '50%',
-          background: `linear-gradient(90deg,${C.gold},${C.goldLight})`,
-          color: '#000', fontWeight: 900, fontSize: '0.72rem', letterSpacing: '.1em',
+    <div className={`pricing-card ${best ? 'pricing-card-best' : ''}`}
+      style={{ padding: '32px 26px', flex: '1 1 270px', maxWidth: '330px', position: 'relative' }}>
+
+      {best && (
+        <div style={{ position: 'absolute', top: '-14px', left: '50%',
+          background: C.orange, color: '#fff', fontFamily: 'Montserrat,sans-serif',
+          fontWeight: 800, fontSize: '0.72rem', letterSpacing: '.1em',
           padding: '5px 20px', borderRadius: '100px', whiteSpace: 'nowrap',
           animation: 'badge-pop 2.5s ease-in-out infinite' }}>
-          ★ MOST POPULAR · BEST VALUE ★
+          ⭐ BEST VALUE · MOST POPULAR ⭐
         </div>
       )}
 
-      <p style={{ color: highlighted ? C.gold : C.textMuted, fontSize: '0.72rem',
-        fontWeight: 700, letterSpacing: '.1em', marginBottom: '6px' }}>{label}</p>
-      <h3 style={{ color: C.textPrimary, fontSize: '1.45rem', fontWeight: 800, marginBottom: '2px' }}>
-        {bottles} Bottles
-      </h3>
-      <p style={{ color: C.textMuted, fontSize: '0.82rem', marginBottom: '18px' }}>{duration} Supply</p>
-
-      <img src={IMG(packageImg)} alt={`${bottles}-bottle pack`}
-        style={{ width: '130px', height: 'auto', display: 'block', margin: '0 auto 18px' }}
-        onError={(e) => imgError(e, 130, 160, `${bottles} Bottles`, '111111', 'f97316')} />
-
-      <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '2.8rem', fontWeight: 900, color: highlighted ? C.gold : C.orange, lineHeight: 1 }}>
-            ${perBottle}
-          </span>
-          <span style={{ color: C.textMuted, fontSize: '0.85rem' }}>/ bottle</span>
-        </div>
-        <div style={{ marginTop: '4px' }}>
-          <span style={{ textDecoration: 'line-through', color: C.textMuted, fontSize: '0.9rem', marginRight: '8px' }}>
-            ${originalTotal}
-          </span>
-          <span style={{ color: C.textPrimary, fontWeight: 700 }}>${total} total</span>
-        </div>
-        <p style={{ color: C.green, fontSize: '0.82rem', fontWeight: 700, marginTop: '4px' }}>
-          You Save: ${savings}!
-        </p>
+      {/* Label */}
+      <div style={{ display: 'inline-block', background: best ? '#FFF7ED' : C.bgGray,
+        color: best ? C.orange : C.textMuted, fontSize: '0.7rem', fontWeight: 700,
+        letterSpacing: '.1em', padding: '3px 12px', borderRadius: '100px', marginBottom: '10px' }}>
+        {label}
       </div>
 
-      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
+      <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: C.textDark, marginBottom: '2px' }}>
+        {bottles} Bottles
+      </h3>
+      <p style={{ color: C.textMuted, fontSize: '0.82rem', marginBottom: '20px' }}>{duration} Supply</p>
+
+      <img src={IMG(packageImg)} alt={`${bottles}-bottle pack`}
+        style={{ width: '130px', height: 'auto', display: 'block', margin: '0 auto 20px' }}
+        onError={(e) => imgFallback(e, 130, 160, `${bottles} Bottles`, 'F9FAFB', 'FF8C00')} />
+
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '2.8rem', fontWeight: 900,
+            color: best ? C.orange : C.textDark, lineHeight: 1 }}>${perBottle}</span>
+          <span style={{ color: C.textMuted, fontSize: '0.82rem' }}>/bottle</span>
+        </div>
+        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', gap: '8px' }}>
+          <span style={{ textDecoration: 'line-through', color: C.textLight, fontSize: '0.9rem' }}>
+            ${originalTotal}
+          </span>
+          <span style={{ fontWeight: 700, color: C.textDark, fontSize: '1rem' }}>${total} total</span>
+        </div>
+        <div style={{ display: 'inline-block', background: C.greenL, color: C.greenD,
+          fontWeight: 700, fontSize: '0.8rem', padding: '3px 12px', borderRadius: '100px', marginTop: '6px' }}>
+          You Save ${savings}!
+        </div>
+      </div>
+
+      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 22px',
+        display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {[
-          bonuses   && '2 FREE Digital Bonuses',
-          freeShip  && 'Free USA Shipping',
+          bonuses  && '2 FREE Digital Bonuses',
+          freeShip && '✓ Free USA Shipping',
           !freeShip && '+ Shipping',
-          '180-Day Money-Back Guarantee',
+          '✓ 180-Day Money-Back Guarantee',
         ].filter(Boolean).map((f) => (
           <li key={String(f)} style={{ display: 'flex', alignItems: 'center', gap: '8px',
-            fontSize: '0.85rem', color: C.textPrimary }}>
-            <span style={{ color: C.green }}>✓</span> {f}
+            color: C.textBody, fontSize: '0.855rem' }}>
+            {String(f).startsWith('✓')
+              ? <span style={{ color: C.green, fontWeight: 700 }}>{f}</span>
+              : <><span style={{ color: C.green, fontWeight: 700 }}>✓</span> {f}</>
+            }
           </li>
         ))}
       </ul>
 
-      <a href={AFFILIATE_LINK}
-        className={`btn-primary ${highlighted ? 'glow-btn' : ''}`}
-        style={{ display: 'block', width: '100%', padding: '15px', fontSize: '0.95rem', borderRadius: '8px',
-          background: highlighted
-            ? `linear-gradient(135deg,${C.gold},${C.orange})`
-            : `linear-gradient(135deg,${C.orange},${C.orangeHover})` }}
-        rel="nofollow noopener" target="_blank">BUY NOW</a>
-
-      {highlighted && (
-        <p style={{ color: C.gold, fontSize: '0.72rem', textAlign: 'center', marginTop: '8px', fontWeight: 600 }}>
-          BIGGEST DISCOUNT · FREE BONUSES INCLUDED
+      <CTAButton label="BUY NOW" size="md" full />
+      {best && (
+        <p style={{ color: C.green, fontSize: '0.75rem', textAlign: 'center',
+          marginTop: '8px', fontWeight: 600 }}>
+          ✓ Free bonuses + free shipping included
         </p>
       )}
     </div>
@@ -479,43 +547,46 @@ function PricingCard({ label, bottles, duration, perBottle, total, originalTotal
 function PricingSection({ id }: { id?: string }) {
   const timer = useCountdown(TIMER_MINUTES, TIMER_SECONDS);
   return (
-    <section id={id} style={{ background: C.bgPrimary, padding: '96px 20px' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <section id={id} style={{ background: C.bgSoft, padding: '96px 20px' }}>
+      <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          {/* Stock alert */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px',
-            background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.35)',
-            borderRadius: '100px', padding: '5px 16px', marginBottom: '16px' }}>
+            background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: '100px',
+            padding: '6px 18px', marginBottom: '20px' }}>
             <span className="pulse-dot" style={{ width: '7px', height: '7px', borderRadius: '50%',
-              background: C.red, display: 'inline-block' }} />
-            <span style={{ color: C.red, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '.1em' }}>
-              STOCK LOW — SPOT RESERVED FOR <span style={{ fontFamily: 'monospace' }}>{timer}</span>
+              background: '#EF4444', display: 'inline-block' }} />
+            <span style={{ color: '#DC2626', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '.06em' }}>
+              STOCK LOW — RESERVED FOR{' '}
+              <span className="ticker-blink" style={{ fontFamily: 'monospace' }}>{timer}</span>
             </span>
           </div>
-          <SectionTitle>Claim Your Discounted CitrusBurn™ Below</SectionTitle>
-          <p style={{ color: C.textMuted }}>
-            While Stock Lasts · 96% of customers choose the 6-bottle pack
-          </p>
+          <SectionHeading sub="Join 96% of customers who choose the 6-bottle pack for best results & value">
+            Claim Your Discounted CitrusBurn™ Today
+          </SectionHeading>
         </div>
 
         <div style={{ display: 'flex', gap: '20px', justifyContent: 'center',
-          flexWrap: 'wrap', alignItems: 'flex-start', marginTop: '48px' }}>
-          <PricingCard label="BASIC"        bottles={2} duration="60 Day"  perBottle={79} total={158} originalTotal={398}  savings={240} bonuses={false} freeShip={false} packageImg="pkg1.png" />
-          <PricingCard label="BUNDLE"       bottles={3} duration="90 Day"  perBottle={69} total={207} originalTotal={597}  savings={390} bonuses={true}  freeShip={false} packageImg="pkg2.png" />
-          <PricingCard label="MOST POPULAR" bottles={6} duration="180 Day" perBottle={49} total={294} originalTotal={1194} savings={900} bonuses={true}  freeShip={true}  highlighted packageImg="pkg3.png" />
+          flexWrap: 'wrap', alignItems: 'flex-start', marginTop: '16px' }}>
+          <PricingCard label="STARTER"      bottles={2} duration="60 Day"  perBottle={79} total={158} originalTotal={398}  savings={240} bonuses={false} freeShip={false} packageImg="pkg1.png" />
+          <PricingCard label="POPULAR"      bottles={3} duration="90 Day"  perBottle={69} total={207} originalTotal={597}  savings={390} bonuses={true}  freeShip={false} packageImg="pkg2.png" />
+          <PricingCard label="BEST VALUE"   bottles={6} duration="180 Day" perBottle={49} total={294} originalTotal={1194} savings={900} bonuses={true}  freeShip={true}  best packageImg="pkg3.png" />
         </div>
 
-        {/* Trust badges — uniform single row */}
+        {/* Trust badge row */}
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center',
-          flexWrap: 'wrap', marginTop: '40px', alignItems: 'center' }}>
+          flexWrap: 'wrap', marginTop: '44px', alignItems: 'center',
+          padding: '24px', background: C.bgWhite, borderRadius: '16px',
+          boxShadow: C.shadow, maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}>
           {[
-            { src: 'mbseal.png',        alt: '180-Day Guarantee', h: 76,  w: 76  },
-            { src: 'bestseller-seal.png', alt: 'Best Seller',     h: 60,  w: 60  },
-            { src: 'shipping-seal.png', alt: 'Free Shipping',     h: 60,  w: 60  },
-            { src: 'cards.png',         alt: 'Secure Payment',    h: 32,  w: 120 },
+            { src: 'mbseal.png',          alt: '180-Day Guarantee', h: 70 },
+            { src: 'bestseller-seal.png', alt: 'Best Seller',       h: 56 },
+            { src: 'shipping-seal.png',   alt: 'Free Shipping',     h: 56 },
+            { src: 'cards.png',           alt: 'Secure Payment',    h: 30 },
           ].map((b) => (
             <img key={b.src} src={IMG(b.src)} alt={b.alt}
               style={{ height: `${b.h}px`, width: 'auto', objectFit: 'contain' }}
-              onError={(e) => imgError(e, b.w, b.h, b.alt)} />
+              onError={(e) => imgFallback(e, 100, b.h, b.alt, 'ffffff', '6B7280')} />
           ))}
         </div>
       </div>
@@ -524,24 +595,38 @@ function PricingSection({ id }: { id?: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// GUARANTEE
+// GUARANTEE — integrated, not floating
 // ---------------------------------------------------------------------------
 function GuaranteeSection() {
   return (
-    <section style={{ background: C.bgCard, padding: '96px 20px', borderTop: `1px solid ${C.border}` }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex',
-        gap: '40px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <img src={IMG('mbseal.png')} alt="180-Day Money-Back Guarantee" style={{ width: '150px', flexShrink: 0 }}
-          onError={(e) => imgError(e, 150, 150, '180-Day Guarantee')} />
-        <div style={{ flex: '1 1 300px' }}>
-          <h2 style={{ color: C.gold, fontSize: '1.45rem', fontWeight: 800,
-            letterSpacing: '.04em', marginBottom: '14px', textTransform: 'uppercase' }}>
-            180-Day · 100% Satisfaction Guarantee
+    <section style={{ background: C.bgGreen, padding: '80px 20px',
+      borderTop: `1px solid ${C.borderGr}`, borderBottom: `1px solid ${C.borderGr}` }}>
+      <div style={{ maxWidth: '820px', margin: '0 auto',
+        display: 'flex', gap: '48px', alignItems: 'center',
+        flexWrap: 'wrap', justifyContent: 'center' }}>
+
+        {/* Seal — integrated look */}
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <img src={IMG('mbseal.png')} alt="180-Day Guarantee"
+            style={{ width: '140px', height: '140px', objectFit: 'contain',
+              filter: 'drop-shadow(0 4px 12px rgba(76,175,80,.2))' }}
+            onError={(e) => imgFallback(e, 140, 140, '180 Days', 'F0FDF4', '4CAF50')} />
+        </div>
+
+        <div style={{ flex: '1 1 320px' }}>
+          <Tag color={C.green}>ZERO RISK · ZERO QUESTIONS</Tag>
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 900, color: C.textDark, marginBottom: '14px' }}>
+            180-Day 100% Money-Back Guarantee
           </h2>
-          <p style={{ color: C.textPrimary, lineHeight: 1.85, marginBottom: '12px' }}>
-            Your order is protected by our no-risk 180-day money-back guarantee. If you&rsquo;re not amazed at how quickly your body feels lighter, more energized, and visibly transformed, just let us know within 180 days and we&rsquo;ll refund every cent.
+          <p style={{ color: C.textBody, lineHeight: 1.85, marginBottom: '14px' }}>
+            Your order is completely protected. If you&rsquo;re not amazed at how quickly your body
+            feels lighter, more energized, and visibly transformed — just contact us within 180 days
+            and we&rsquo;ll refund every cent of your purchase.
           </p>
-          <p style={{ color: C.gold, fontWeight: 700 }}>No questions asked. Zero risk.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: C.green, fontSize: '1.2rem' }}>✓</span>
+            <span style={{ color: C.greenD, fontWeight: 700 }}>No questions asked. No hassle. Full refund.</span>
+          </div>
         </div>
       </div>
     </section>
@@ -553,46 +638,48 @@ function GuaranteeSection() {
 // ---------------------------------------------------------------------------
 function BonusSection() {
   return (
-    <section id="free-bonuses" style={{ background: C.bgPrimary, padding: '96px 20px' }}>
+    <section id="free-bonuses" style={{ background: C.bgWhite, padding: '96px 20px' }}>
       <div style={{ maxWidth: '860px', margin: '0 auto', textAlign: 'center' }}>
-        <SectionTag color={C.gold}>🎁 ORDER 3 OR 6 BOTTLES AND GET</SectionTag>
-        <SectionTitle>2 FREE Digital Bonuses</SectionTitle>
-        <p style={{ color: C.textMuted, marginBottom: '48px' }}>
-          A combined $114 value — yours FREE with the 3 or 6 bottle pack
-        </p>
+        <Tag>🎁 FREE WITH 3 OR 6 BOTTLE ORDER</Tag>
+        <SectionHeading sub="A combined $114 value — yours absolutely FREE when you choose the 3 or 6 bottle pack">
+          2 FREE Digital Bonuses
+        </SectionHeading>
 
         <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {[
             { img: 'bonus1.png', n: '#1', title: 'Spanish Rapid Detox Protocol', val: '$67',
-              desc: 'Keep out toxins and support thermogenesis with this 15-day Mediterranean cleanse using simple, powerful ingredients from your kitchen. Designed to jumpstart your results.' },
+              desc: 'A 15-day Mediterranean cleanse using simple, powerful ingredients from your kitchen. Designed to support thermogenesis and jumpstart your CitrusBurn™ results from day one.', color: C.orange },
             { img: 'bonus2.png', n: '#2', title: 'Mind Over Metabolism Mastery', val: '$47',
-              desc: 'Rewire your mindset with daily 5-minute visualization and craving-reset techniques. Reduces emotional eating, boosts motivation, and locks in long-term transformation.' },
+              desc: '5-minute daily visualization and craving-reset techniques that reduce emotional eating, boost motivation, and lock in long-term transformation.', color: C.green },
           ].map((b) => (
-            <div key={b.n} style={{ background: C.bgCard,
-              border: `1px solid ${C.gold}`, borderRadius: '16px', padding: '28px 24px',
-              flex: '1 1 300px', maxWidth: '390px', textAlign: 'left',
-              boxShadow: '0 0 28px rgba(212,160,23,.1)' }}>
-              <div style={{ display: 'inline-block', background: 'rgba(212,160,23,.1)',
-                border: `1px solid ${C.gold}`, borderRadius: '6px', padding: '3px 10px', marginBottom: '16px' }}>
-                <span style={{ color: C.gold, fontSize: '0.72rem', fontWeight: 700 }}>FREE BONUS {b.n}</span>
+            <div key={b.n} style={{ background: C.bgWhite, border: `1.5px solid ${C.border}`,
+              borderRadius: '20px', padding: '32px 28px', flex: '1 1 300px', maxWidth: '390px',
+              textAlign: 'left', boxShadow: C.shadowMd,
+              borderTop: `4px solid ${b.color}` }}>
+              <div style={{ display: 'inline-block', background: b.color === C.orange ? '#FFF7ED' : C.greenL,
+                color: b.color, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '.08em',
+                padding: '4px 12px', borderRadius: '6px', marginBottom: '20px' }}>
+                FREE BONUS {b.n}
               </div>
               <img src={IMG(b.img)} alt={b.title}
-                style={{ width: '100%', maxWidth: '180px', height: 'auto', display: 'block', margin: '0 auto 16px' }}
-                onError={(e) => imgError(e, 180, 220, b.title)} />
-              <h3 style={{ color: C.textPrimary, fontSize: '1.05rem', fontWeight: 800, marginBottom: '5px' }}>{b.title}</h3>
-              <p style={{ color: C.gold, fontWeight: 700, fontSize: '0.82rem', marginBottom: '10px' }}>
-                Value: {b.val} — Yours 100% FREE
+                style={{ width: '100%', maxWidth: '170px', height: 'auto',
+                  display: 'block', margin: '0 auto 20px' }}
+                onError={(e) => imgFallback(e, 170, 210, b.title, 'F9FAFB', 'FF8C00')} />
+              <h3 style={{ color: C.textDark, fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px' }}>
+                {b.title}
+              </h3>
+              <p style={{ color: b.color, fontWeight: 700, fontSize: '0.82rem', marginBottom: '10px' }}>
+                Retail Value: {b.val} — Yours 100% FREE
               </p>
-              <p style={{ color: C.textMuted, fontSize: '0.875rem', lineHeight: 1.72 }}>{b.desc}</p>
+              <p style={{ color: C.textMuted, fontSize: '0.875rem', lineHeight: 1.75 }}>{b.desc}</p>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          <CTAButton label="GET FREE BONUSES + CLAIM DISCOUNT" size="lg" />
-          <p style={{ color: C.textMuted, fontSize: '0.78rem', margin: 0 }}>
-            Free USA Shipping on the 6-bottle pack
-          </p>
+        <div style={{ marginTop: '44px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: '12px' }}>
+          <CTAButton label="CLAIM FREE BONUSES + SAVE 75%" size="lg" />
+          <p style={{ color: C.textMuted, fontSize: '0.8rem' }}>Free USA Shipping on the 6-bottle pack</p>
         </div>
       </div>
     </section>
@@ -600,100 +687,125 @@ function BonusSection() {
 }
 
 // ---------------------------------------------------------------------------
-// SCIENCE
+// SCIENCE — Medical Journal Grid Style
 // ---------------------------------------------------------------------------
 function ScienceSection() {
   return (
-    <section id="about" style={{ background: 'linear-gradient(180deg,#0a0a0a,#050800)', padding: '96px 20px' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <SectionTag color={C.orange}>HARVARD &amp; BARCELONA RESEARCH · APRIL 2026</SectionTag>
-          <SectionTitle>Scientists Reveal the Hidden Cause of Slow Metabolism</SectionTitle>
-          <p style={{ color: C.textMuted, fontSize: '1.05rem' }}>
-            And it&rsquo;s <em>not</em> your age, diet, or willpower.
-          </p>
+    <section id="about" style={{ background: C.bgPage, padding: '96px 20px' }}>
+      <div style={{ maxWidth: '980px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <Tag color={C.orange}>HARVARD & BARCELONA RESEARCH · APRIL 2026</Tag>
+          <SectionHeading sub="New studies reveal why diets fail after 35 — and it's not what you think.">
+            Scientists Reveal the Hidden Cause of Slow Metabolism
+          </SectionHeading>
         </div>
 
-        <div style={{ background: C.bgCard, border: `1px solid ${C.border}`,
-          borderRadius: '20px', padding: '40px 36px', marginBottom: '32px' }}>
-          <p style={{ color: C.textPrimary, lineHeight: 1.9, marginBottom: '20px' }}>
-            New studies show the real reason most people struggle to lose weight — especially after 35 — is something called{' '}
-            <strong style={{ color: C.orange }}>Thermogenic Resistance</strong>. This condition prevents your metabolism
-            from entering a natural fat-burning state known as <strong>thermogenesis</strong>, even when you eat well or exercise.
-          </p>
-
-          <div style={{ borderLeft: `4px solid ${C.orange}`, paddingLeft: '20px', margin: '24px 0' }}>
-            <p style={{ color: C.textPrimary, fontSize: '1.1rem', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.7 }}>
-              &ldquo;It&rsquo;s like flipping a switch that tells your body to burn fat, automatically.&rdquo;
-            </p>
-            <span style={{ color: C.textMuted, fontSize: '0.82rem' }}>— Dr. Reeves, Lead Researcher</span>
-          </div>
-
-          <p style={{ color: C.textPrimary, lineHeight: 1.9, marginBottom: '24px' }}>
-            Research from <strong style={{ color: C.gold }}>Harvard</strong>,{' '}
-            <strong style={{ color: C.gold }}>Mayo Clinic</strong>, and the{' '}
-            <strong style={{ color: C.gold }}>University of Barcelona</strong> shows a rare compound in Seville orange peel
-            can break through Thermogenic Resistance — increasing thermogenesis by up to:
-          </p>
-
-          <div style={{ textAlign: 'center', padding: '28px',
-            background: 'rgba(212,160,23,.05)', border: '1px solid rgba(212,160,23,.2)',
-            borderRadius: '16px', marginBottom: '24px' }}>
-            <div className="shimmer-text" style={{ fontSize: '5.5rem', fontWeight: 900,
-              lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>74%</div>
-            <p style={{ color: C.textMuted, marginTop: '8px' }}>
-              Increase in thermogenesis — burning stored fat continuously,{' '}
-              <strong style={{ color: C.textPrimary }}>even while sleeping</strong>.
-            </p>
-          </div>
-
-          <h3 style={{ color: C.textPrimary, fontSize: '1.15rem', fontWeight: 700, marginBottom: '10px' }}>
-            What Is Thermogenesis?
-          </h3>
-          <p style={{ color: C.textMuted, lineHeight: 1.85 }}>
-            Thermogenesis is your body&rsquo;s natural way of burning calories for energy. After age 35 it slows — especially
-            in women — leading to weight gain, low energy, and stalled progress. The CitrusBurn™ formula{' '}
-            <strong style={{ color: C.textPrimary }}>activates fat-burning at the source</strong> with botanicals that
-            support thermogenesis and break the cycle.
-          </p>
+        {/* Medical journal grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))',
+          gap: '24px', marginBottom: '48px' }}>
+          {[
+            {
+              label: 'THE CONDITION',
+              title: 'Thermogenic Resistance',
+              body: 'A metabolic condition that prevents your body from entering the natural fat-burning state of thermogenesis — even when eating well or exercising consistently.',
+              icon: '🔬', accent: C.orange,
+            },
+            {
+              label: 'THE RESEARCH',
+              title: 'Harvard, Mayo Clinic & University of Barcelona',
+              body: 'Three independent research institutions confirmed that a rare compound in Seville orange peel can break through Thermogenic Resistance and restore metabolic function.',
+              icon: '📋', accent: '#6366F1',
+            },
+            {
+              label: 'THE RESULT',
+              title: 'Up to 74% Increase in Thermogenesis',
+              body: 'Participants who supplemented with the key compound experienced up to a 74% increase in thermogenesis — burning stored fat continuously, even during sleep.',
+              icon: '📈', accent: C.green,
+            },
+          ].map((card) => (
+            <div key={card.label} style={{ background: C.bgWhite, border: `1.5px solid ${C.border}`,
+              borderRadius: '16px', padding: '28px 24px', boxShadow: C.shadow,
+              borderLeft: `4px solid ${card.accent}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '1.4rem' }}>{card.icon}</span>
+                <span style={{ color: card.accent, fontSize: '0.68rem', fontWeight: 800,
+                  letterSpacing: '.12em', textTransform: 'uppercase' }}>{card.label}</span>
+              </div>
+              <h3 style={{ color: C.textDark, fontSize: '1.05rem', fontWeight: 800,
+                marginBottom: '10px' }}>{card.title}</h3>
+              <p style={{ color: C.textBody, fontSize: '0.9rem', lineHeight: 1.75 }}>{card.body}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Product intro + badges */}
+        {/* 74% stat callout */}
+        <div style={{ background: C.bgWhite, border: `1.5px solid ${C.border}`,
+          borderRadius: '20px', padding: '48px 40px', boxShadow: C.shadowMd,
+          display: 'flex', gap: '48px', alignItems: 'center',
+          flexWrap: 'wrap', justifyContent: 'center', marginBottom: '48px' }}>
+          <div style={{ textAlign: 'center', flexShrink: 0 }}>
+            <div style={{ fontSize: '5.5rem', fontWeight: 900, color: C.orange,
+              fontFamily: 'Montserrat,sans-serif', lineHeight: 1 }}>74%</div>
+            <div style={{ color: C.textMuted, fontSize: '0.82rem', marginTop: '4px' }}>
+              Thermogenesis increase
+            </div>
+          </div>
+          <div style={{ flex: '1 1 300px' }}>
+            <p style={{ color: C.textBody, fontSize: '1rem', lineHeight: 1.85, marginBottom: '16px' }}>
+              Research from <strong>Harvard</strong>, <strong>Mayo Clinic</strong>, and the{' '}
+              <strong>University of Barcelona</strong> shows that p-synephrine — the active compound
+              in CitrusBurn™&rsquo;s Seville Orange Peel extract — can increase thermogenesis by up to{' '}
+              <strong style={{ color: C.orange }}>74%</strong>, enabling your body to burn stored fat
+              continuously, even while you sleep.
+            </p>
+            <blockquote style={{ borderLeft: `3px solid ${C.orange}`, paddingLeft: '16px', margin: 0 }}>
+              <p style={{ color: C.textDark, fontStyle: 'italic', fontSize: '0.95rem',
+                fontWeight: 500, lineHeight: 1.7 }}>
+                &ldquo;It&rsquo;s like flipping a switch that tells your body to burn fat, automatically.&rdquo;
+              </p>
+              <cite style={{ color: C.textMuted, fontSize: '0.8rem', fontStyle: 'normal' }}>
+                — Dr. Reeves, Lead Researcher
+              </cite>
+            </blockquote>
+          </div>
+        </div>
+
+        {/* Product intro + certification badges */}
         <div style={{ textAlign: 'center' }}>
-          <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.75rem',
-            fontWeight: 900, color: C.textPrimary, marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '1.8rem', fontWeight: 900, color: C.textDark, marginBottom: '14px' }}>
             That&rsquo;s Why We Created CitrusBurn™
           </h3>
-          <p style={{ color: C.textMuted, maxWidth: '660px', margin: '0 auto 28px', lineHeight: 1.85 }}>
-            CitrusBurn™ is a 100% natural breakthrough designed to reignite your metabolism — without harsh stimulants,
-            injections, or crash diets. A science-backed blend of{' '}
-            <strong style={{ color: C.orange }}>7 rare botanicals</strong> shown to optimize the body&rsquo;s natural
-            fat-burning capacity, even while you sleep.
+          <p style={{ color: C.textBody, maxWidth: '660px', margin: '0 auto 32px', lineHeight: 1.85 }}>
+            CitrusBurn™ is a 100% natural breakthrough designed to reignite your metabolism without harsh
+            stimulants, injections, or crash diets. A science-backed blend of{' '}
+            <strong style={{ color: C.orange }}>7 rare botanicals</strong> that optimize your body&rsquo;s
+            natural fat-burning capacity — even while you sleep.
           </p>
 
-          {/* Certification badges — single clean row */}
+          {/* Certification badges — single uniform row */}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center',
             flexWrap: 'wrap', marginBottom: '32px' }}>
             {[
-              { icon: '🌱', label: '100% Natural' },
-              { icon: '🚫', label: 'Non-GMO' },
-              { icon: '⚡', label: 'Stimulant-Free' },
-              { icon: '🏭', label: 'FDA-Registered' },
-              { icon: '✅', label: 'GMP Certified' },
-              { icon: '🇺🇸', label: 'Made in USA' },
+              { icon: '🌱', label: '100% Natural'      },
+              { icon: '🚫', label: 'Non-GMO'           },
+              { icon: '⚡', label: 'Stimulant-Free'    },
+              { icon: '🏭', label: 'FDA-Registered'    },
+              { icon: '✅', label: 'GMP Certified'     },
+              { icon: '🇺🇸', label: 'Made in USA'      },
             ].map((b) => (
               <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: '6px',
-                background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.22)',
-                borderRadius: '100px', padding: '6px 14px' }}>
+                background: C.bgWhite, border: `1.5px solid ${C.border}`,
+                borderRadius: '100px', padding: '7px 16px',
+                boxShadow: '0 1px 4px rgba(0,0,0,.04)' }}>
                 <span style={{ fontSize: '0.9rem' }}>{b.icon}</span>
-                <span style={{ color: C.orange, fontSize: '0.72rem', fontWeight: 700 }}>{b.label}</span>
+                <span style={{ color: C.textBody, fontSize: '0.75rem', fontWeight: 600 }}>{b.label}</span>
               </div>
             ))}
           </div>
 
           <img src={IMG('s3icons.png')} alt="Certification icons"
-            style={{ maxWidth: '380px', width: '100%', height: 'auto', opacity: 0.75 }}
-            onError={(e) => imgError(e, 380, 80, 'FDA · GMP · Non-GMO · Plant-Based', '0a0a0a', '5a5a5a')} />
+            style={{ maxWidth: '380px', width: '100%', height: 'auto', opacity: 0.6 }}
+            onError={(e) => imgFallback(e, 380, 72, 'FDA · GMP · Non-GMO · Plant-Based', 'F9FAFB', '9CA3AF')} />
         </div>
       </div>
     </section>
@@ -701,52 +813,51 @@ function ScienceSection() {
 }
 
 // ---------------------------------------------------------------------------
-// INGREDIENTS — 3-column glassmorphism grid
+// INGREDIENTS — clean 3-column grid
 // ---------------------------------------------------------------------------
 const INGREDIENTS = [
-  { icon: 's8licon1.png', name: 'Seville Orange Peel',   sub: '(p-synephrine)',  stat: 'Primary Thermogenic', benefit: 'Supports thermogenesis and burns fat fast',           color: C.orange },
-  { icon: 's8licon2.png', name: 'Spanish Apple Vinegar', sub: '',                stat: 'Appetite Control',    benefit: 'Promotes fullness and curbs overeating',              color: '#e85d04' },
-  { icon: 's8licon3.png', name: 'Andalusian Red Pepper', sub: '',                stat: '+25% Calorie Burn',   benefit: 'Increases post-meal calorie burn by 25%',             color: C.red    },
-  { icon: 's8licon4.png', name: 'Himalayan Ginger',      sub: '',                stat: '54% Craving Reduction',benefit: 'Reduces cravings by 54%, supports blood sugar',     color: '#f59e0b' },
-  { icon: 's8licon5.png', name: 'Ceremonial Green Tea',  sub: '',                stat: 'Fat Oxidation',       benefit: 'Enhances fat oxidation and sustained energy',         color: '#22c55e' },
-  { icon: 's8licon6.png', name: 'Berberine',             sub: '',                stat: 'Metabolic Regulator', benefit: 'Supports healthy metabolic & hormonal balance',       color: C.gold   },
-  { icon: 's8licon1.png', name: 'Korean Red Ginseng',    sub: '',                stat: 'Hormone Optimizer',   benefit: 'Balances hormones for optimal metabolic function',    color: '#a78bfa' },
+  { icon: 's8licon1.png', name: 'Seville Orange Peel',   sub: '(p-synephrine)',  stat: 'Primary Thermogenic',   benefit: 'Supports thermogenesis and accelerates fat burn',          accent: C.orange },
+  { icon: 's8licon2.png', name: 'Spanish Apple Vinegar', sub: '',                stat: 'Appetite Control',      benefit: 'Promotes fullness and reduces overeating impulses',        accent: '#F59E0B' },
+  { icon: 's8licon3.png', name: 'Andalusian Red Pepper', sub: '',                stat: '+25% Calorie Burn',     benefit: 'Increases post-meal calorie burn by up to 25%',            accent: '#EF4444' },
+  { icon: 's8licon4.png', name: 'Himalayan Ginger',      sub: '',                stat: '54% Craving Reduction', benefit: 'Clinically reduces cravings by 54% and supports blood sugar', accent: '#10B981' },
+  { icon: 's8licon5.png', name: 'Ceremonial Green Tea',  sub: '',                stat: 'Fat Oxidation',         benefit: 'Enhances fat oxidation and delivers sustained energy',     accent: C.green  },
+  { icon: 's8licon6.png', name: 'Berberine',             sub: '',                stat: 'Metabolic Regulator',   benefit: 'Supports healthy metabolic and hormonal balance',          accent: '#8B5CF6' },
+  { icon: 's8licon1.png', name: 'Korean Red Ginseng',    sub: '',                stat: 'Hormone Optimizer',     benefit: 'Balances hormones for optimal metabolic performance',      accent: '#EC4899' },
 ];
 
 function IngredientsSection() {
   return (
-    <section id="ingredients" style={{ background: C.bgElevated, padding: '96px 20px',
+    <section id="ingredients" style={{ background: C.bgPage, padding: '96px 20px',
       borderTop: `1px solid ${C.border}` }}>
-      <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '52px' }}>
-          <SectionTag color={C.orange}>THE SPANISH FAT-MELTING FORMULA</SectionTag>
-          <SectionTitle>7 Rare Botanicals Inside Every Capsule</SectionTitle>
-          <p style={{ color: C.textMuted, maxWidth: '580px', margin: '0 auto' }}>
-            Each ingredient is sourced from elite botanical regions and standardized for maximum bioavailability.
-          </p>
+      <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <Tag color={C.orange}>THE SPANISH FAT-MELTING FORMULA</Tag>
+          <SectionHeading sub="Each ingredient is sourced from elite botanical regions and standardized for maximum bioavailability.">
+            7 Rare Botanicals Inside Every Capsule
+          </SectionHeading>
         </div>
 
-        {/* 3-column grid, glassmorphism */}
         <div style={{ display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '20px' }}>
+          gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}>
           {INGREDIENTS.map((ing) => (
-            <div key={ing.name} className="glass-card" style={{ borderRadius: '16px', padding: '26px 22px' }}>
+            <div key={ing.name} className="ingredient-card"
+              style={{ padding: '24px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
                 <div style={{ width: '50px', height: '50px', borderRadius: '14px', flexShrink: 0,
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,160,23,.15)',
+                  background: `${ing.accent}15`, border: `1.5px solid ${ing.accent}30`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src={IMG(ing.icon)} alt={ing.name} style={{ width: '28px', height: '28px', objectFit: 'contain' }}
-                    onError={(e) => imgError(e, 28, 28, ing.name[0], '1a1a1a', 'd4a017')} />
+                  <img src={IMG(ing.icon)} alt={ing.name}
+                    style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+                    onError={(e) => imgFallback(e, 28, 28, ing.name[0], 'F9FAFB', 'FF8C00')} />
                 </div>
                 <div>
-                  <h3 style={{ color: C.textPrimary, fontSize: '0.92rem', fontWeight: 700, margin: 0 }}>{ing.name}</h3>
-                  {ing.sub && <p style={{ color: C.textMuted, fontSize: '0.72rem', margin: '2px 0 0' }}>{ing.sub}</p>}
+                  <h3 style={{ color: C.textDark, fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>{ing.name}</h3>
+                  {ing.sub && <p style={{ color: C.textMuted, fontSize: '0.7rem', margin: '2px 0 0' }}>{ing.sub}</p>}
                 </div>
               </div>
-              <div style={{ display: 'inline-block', background: `${ing.color}18`,
-                color: ing.color, fontSize: '0.68rem', fontWeight: 700, padding: '3px 10px',
-                borderRadius: '100px', marginBottom: '10px', letterSpacing: '.04em' }}>
+              <div style={{ display: 'inline-block', background: `${ing.accent}12`,
+                color: ing.accent, fontSize: '0.68rem', fontWeight: 700,
+                padding: '3px 10px', borderRadius: '100px', marginBottom: '8px' }}>
                 {ing.stat}
               </div>
               <p style={{ color: C.textMuted, fontSize: '0.84rem', lineHeight: 1.65, margin: 0 }}>{ing.benefit}</p>
@@ -754,14 +865,10 @@ function IngredientsSection() {
           ))}
         </div>
 
-        {/* Mobile: collapse to 1-column via inline responsive style */}
+        {/* Responsive column adjustment */}
         <style>{`
-          @media (max-width: 768px) {
-            #ingredients-grid { grid-template-columns: 1fr !important; }
-          }
-          @media (min-width: 769px) and (max-width: 1024px) {
-            #ingredients-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          }
+          @media (max-width: 767px)  { #ing-grid { grid-template-columns: 1fr !important; } }
+          @media (min-width: 768px) and (max-width: 1023px) { #ing-grid { grid-template-columns: repeat(2,1fr) !important; } }
         `}</style>
       </div>
     </section>
@@ -772,64 +879,68 @@ function IngredientsSection() {
 // TESTIMONIALS
 // ---------------------------------------------------------------------------
 const TESTIMONIALS = [
-  { photo: 'testi-1-min.png', name: 'Tasha M.', age: 41, location: 'Austin, TX',    lost: '22 lbs',
+  { photo: 'testi-1-min.png', name: 'Tasha M.', age: 41, location: 'Austin, TX', lost: '22 lbs',
     quote: "I bought CitrusBurn™ on a whim. Within a week my jeans were looser and my energy was stable all day. No jitters — just calm, steady progress. I've lost 22 pounds and feel in control for the first time in years." },
   { photo: 'testi-2-min.png', name: 'Neil C.',  age: 57, location: 'Asheville, NC', lost: '17 lbs',
-    quote: "The late-night eating was killing me. CitrusBurn™ made the difference almost immediately. I dropped 17 pounds, my doctor noticed improved wellness markers, and I'm not falling asleep at my desk by 3pm. I feel younger than I have in a decade." },
+    quote: "The late-night eating was killing me. CitrusBurn™ made the difference almost immediately. I dropped 17 pounds, my doctor noticed improved wellness markers, and I'm not falling asleep at my desk by 3pm anymore. I feel younger than I have in a decade." },
   { photo: 'testi-3-min.png', name: 'Elizabeth V.', age: 62, location: 'Boise, ID', lost: '14 lbs',
-    quote: "I used to wake up foggy and dragging. Now I take CitrusBurn™ with water in the morning and within 30 minutes I'm moving with purpose. I've lost 14 pounds and I'm back to being the version of myself I actually like." },
+    quote: "I used to wake up foggy and dragging through the day. Now I take CitrusBurn™ in the morning and within 30 minutes I'm moving with purpose. I've lost 14 pounds and I'm back to being the version of myself I actually like." },
 ];
 
 function TestimonialsSection() {
   return (
-    <section style={{ background: 'linear-gradient(180deg,#0a0a0a,#0f0700)', padding: '96px 20px' }}>
-      <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '52px' }}>
-          <SectionTag color={C.orange}>REAL CITRUSBURN™ USERS · REAL RESULTS</SectionTag>
-          <SectionTitle>Life-Changing Results From Real People</SectionTitle>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <Stars />
-            <span style={{ color: C.textMuted, fontSize: '0.88rem' }}>
-              Average rating: <strong style={{ color: C.textPrimary }}>4.9/5</strong> · 73,000+ verified reviews
-            </span>
-          </div>
+    <section style={{ background: C.bgGray, padding: '96px 20px' }}>
+      <div style={{ maxWidth: '1060px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <Tag color={C.green}>REAL CITRUSBURN™ USERS · VERIFIED RESULTS</Tag>
+          <SectionHeading sub="4.9/5 average rating across 73,000+ verified customer reviews">
+            Life-Changing Results From Real People
+          </SectionHeading>
         </div>
 
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {TESTIMONIALS.map((t) => (
-            <div key={t.name} style={{ background: C.bgCard, border: `1px solid ${C.border}`,
-              borderRadius: '16px', padding: '28px 24px', flex: '1 1 290px', maxWidth: '340px',
-              position: 'relative', boxShadow: '0 4px 30px rgba(249,115,22,.12)' }}>
-              <div style={{ position: 'absolute', top: '18px', right: '22px', fontSize: '3rem',
-                color: C.orange, opacity: 0.15, lineHeight: 1, fontFamily: 'Georgia, serif' }}>&rdquo;</div>
+            <div key={t.name} style={{ background: C.bgWhite, border: `1.5px solid ${C.border}`,
+              borderRadius: '20px', padding: '32px 28px', flex: '1 1 290px', maxWidth: '330px',
+              boxShadow: C.shadowMd, position: 'relative' }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
+              {/* Quote */}
+              <div style={{ position: 'absolute', top: '20px', right: '24px',
+                fontSize: '2.5rem', color: C.orange, opacity: 0.15,
+                lineHeight: 1, fontFamily: 'Georgia,serif' }}>&rdquo;</div>
+
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
                 <img src={IMG(t.photo)} alt={t.name}
-                  style={{ width: '58px', height: '58px', borderRadius: '50%',
-                    objectFit: 'cover', border: `2px solid ${C.orange}`, flexShrink: 0 }}
-                  onError={(e) => imgError(e, 58, 58, t.name[0], '1a1a1a', 'f97316')} />
+                  style={{ width: '56px', height: '56px', borderRadius: '50%',
+                    objectFit: 'cover', border: `2px solid ${C.borderOr}`, flexShrink: 0 }}
+                  onError={(e) => imgFallback(e, 56, 56, t.name[0], 'FFF7ED', 'FF8C00')} />
                 <div>
-                  <div style={{ fontWeight: 700, color: C.textPrimary, fontSize: '0.95rem' }}>{t.name}, age {t.age}</div>
+                  <div style={{ fontWeight: 700, color: C.textDark, fontSize: '0.95rem' }}>
+                    {t.name}, age {t.age}
+                  </div>
                   <div style={{ color: C.textMuted, fontSize: '0.78rem' }}>{t.location} · Verified Purchase</div>
-                  <Stars />
+                  <Stars n={5} size="0.85rem" />
                 </div>
               </div>
 
+              {/* Lost badge */}
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
-                background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.25)',
-                borderRadius: '100px', padding: '2px 10px', marginBottom: '12px' }}>
-                <span style={{ color: C.green, fontSize: '0.78rem', fontWeight: 700 }}>Lost {t.lost}</span>
+                background: C.greenL, border: `1px solid ${C.borderGr}`, borderRadius: '100px',
+                padding: '3px 12px', marginBottom: '14px' }}>
+                <span style={{ color: C.greenD, fontSize: '0.8rem', fontWeight: 700 }}>
+                  ↓ Lost {t.lost}
+                </span>
               </div>
 
-              <p style={{ color: C.textMuted, fontSize: '0.875rem', lineHeight: 1.75, fontStyle: 'italic', margin: 0 }}>
-                &ldquo;{t.quote}&rdquo;
-              </p>
+              <p style={{ color: C.textBody, fontSize: '0.88rem', lineHeight: 1.75,
+                fontStyle: 'italic', margin: 0 }}>&ldquo;{t.quote}&rdquo;</p>
             </div>
           ))}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '52px' }}>
-          <CTAButton label="JOIN THOUSANDS — CLAIM YOUR DISCOUNT" size="lg" />
+          <CTAButton label="JOIN 73,000+ CUSTOMERS — CLAIM YOUR DISCOUNT" size="lg" />
         </div>
       </div>
     </section>
@@ -837,14 +948,14 @@ function TestimonialsSection() {
 }
 
 // ---------------------------------------------------------------------------
-// TRUST STRIP — clean uniform certification row
+// TRUST STRIP
 // ---------------------------------------------------------------------------
 function TrustStrip() {
   return (
-    <section style={{ background: C.bgElevated, padding: '24px 20px',
+    <section style={{ background: C.bgWhite, padding: '28px 20px',
       borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-      <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex',
-        justifyContent: 'center', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', display: 'flex',
+        justifyContent: 'center', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
         {[
           { icon: '🏭', label: 'FDA-Registered Facility' },
           { icon: '✅', label: 'GMP Certified'            },
@@ -854,10 +965,10 @@ function TrustStrip() {
           { icon: '💳', label: 'One-Time Payment'         },
         ].map((b) => (
           <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: '7px',
-            padding: '6px 14px', background: 'rgba(255,255,255,.02)',
-            border: `1px solid ${C.border}`, borderRadius: '100px' }}>
-            <span style={{ fontSize: '1rem' }}>{b.icon}</span>
-            <span style={{ color: C.textMuted, fontSize: '0.78rem', fontWeight: 600 }}>{b.label}</span>
+            background: C.bgPage, border: `1px solid ${C.border}`,
+            borderRadius: '100px', padding: '7px 16px' }}>
+            <span style={{ fontSize: '0.95rem' }}>{b.icon}</span>
+            <span style={{ color: C.textBody, fontSize: '0.78rem', fontWeight: 600 }}>{b.label}</span>
           </div>
         ))}
       </div>
@@ -870,53 +981,57 @@ function TrustStrip() {
 // ---------------------------------------------------------------------------
 const FAQS = [
   { q: 'Is CitrusBurn™ right for me?',
-    a: "If you're struggling with stubborn weight, low energy, or a sluggish metabolism — especially after 40 — CitrusBurn™ was made for you. It's designed for both men and women seeking natural metabolic support." },
+    a: "If you're struggling with stubborn weight, low energy, or a sluggish metabolism — especially after 40 — CitrusBurn™ was made for you. It's designed for both men and women who want a natural way to support healthier metabolic function and overall vitality." },
   { q: 'Is CitrusBurn™ safe?',
-    a: 'CitrusBurn™ is manufactured in an FDA-registered, GMP-certified US facility. Every ingredient is 100% plant-based, soy-free, dairy-free, and non-GMO, with third-party quality testing on every batch. Always consult your physician before starting a new supplement.' },
+    a: 'CitrusBurn™ is manufactured in an FDA-registered, GMP-certified US facility. Every ingredient is 100% plant-based, soy-free, dairy-free, and non-GMO, with rigorous third-party quality testing on every batch. Always consult your physician before starting any new supplement.' },
   { q: 'How many bottles should I order?',
-    a: 'We recommend the 6-bottle package. Most customers experience noticeable changes after 6–12 weeks of consistent use. The 6-pack also includes free shipping and both digital bonuses.' },
+    a: 'We recommend the 6-bottle package. Most customers experience noticeable changes after 6–12 weeks of consistent use. The 6-pack also includes free USA shipping and both digital bonuses.' },
   { q: "What's the best way to take CitrusBurn™?",
-    a: 'Take 1 capsule daily with a full glass of water, ideally in the morning before breakfast. Consistency is key.' },
+    a: 'Take 1 easy-to-swallow capsule daily with a full glass of water, ideally in the morning before breakfast. Consistency is key.' },
   { q: 'Is this a one-time payment?',
-    a: "Yes. No hidden charges, subscriptions, or automatic re-bills — ever." },
-  { q: "What if it doesn't work for me?",
-    a: "You're covered by our 180-day money-back guarantee. If you're not thrilled with your results, contact support for a full refund. No questions asked." },
+    a: "Yes — absolutely. There are no hidden charges, subscriptions, or automatic re-bills. One purchase, that's it." },
+  { q: "What if CitrusBurn™ doesn't work for me?",
+    a: "You're fully covered by our 180-day money-back guarantee. If you're not completely satisfied with your results, contact our support team for a full refund. No questions, no hassle." },
 ];
 
 function FAQSection() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <section id="faq" style={{ background: C.bgPrimary, padding: '96px 20px' }}>
-      <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <SectionTitle>Frequently Asked Questions</SectionTitle>
-        </div>
+    <section id="faq" style={{ background: C.bgWhite, padding: '96px 20px' }}>
+      <div style={{ maxWidth: '740px', margin: '0 auto' }}>
+        <SectionHeading>Frequently Asked Questions</SectionHeading>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {FAQS.map((faq, i) => {
             const isOpen = open === i;
             return (
-              <div key={i} style={{ background: C.bgCard,
-                border: `1px solid ${isOpen ? C.orange : C.border}`,
-                borderRadius: '12px', overflow: 'hidden', transition: 'border-color .2s' }}>
+              <div key={i} style={{ background: C.bgPage,
+                border: `1.5px solid ${isOpen ? C.orange : C.border}`,
+                borderRadius: '14px', overflow: 'hidden',
+                boxShadow: isOpen ? C.shadowOr : 'none',
+                transition: 'border-color .2s, box-shadow .2s' }}>
                 <button onClick={() => setOpen(isOpen ? null : i)}
-                  style={{ width: '100%', padding: '18px 24px', background: 'transparent', border: 'none',
-                    cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
-                    alignItems: 'center', gap: '16px', textAlign: 'left' }}>
-                  <span style={{ color: C.textPrimary, fontWeight: 600, fontSize: '0.92rem', flex: 1 }}>{faq.q}</span>
+                  style={{ width: '100%', padding: '18px 24px', background: 'transparent',
+                    border: 'none', cursor: 'pointer', display: 'flex',
+                    justifyContent: 'space-between', alignItems: 'center',
+                    gap: '16px', textAlign: 'left' }}>
+                  <span style={{ color: C.textDark, fontWeight: 700, fontSize: '0.92rem', flex: 1 }}>
+                    {faq.q}
+                  </span>
                   <span style={{ color: C.orange, fontSize: '1.4rem', lineHeight: 1, flexShrink: 0,
-                    transform: isOpen ? 'rotate(45deg)' : 'rotate(0)', transition: 'transform .25s' }}>+</span>
+                    transform: isOpen ? 'rotate(45deg)' : 'rotate(0)',
+                    transition: 'transform .25s' }}>+</span>
                 </button>
                 <div className={`faq-answer ${isOpen ? 'open' : ''}`}
                   style={{ padding: isOpen ? '0 24px 18px' : '0 24px 0' }}>
-                  <p style={{ color: C.textMuted, lineHeight: 1.8, fontSize: '0.88rem', margin: 0 }}>{faq.a}</p>
+                  <p style={{ color: C.textBody, lineHeight: 1.8, fontSize: '0.88rem', margin: 0 }}>{faq.a}</p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '48px' }}>
+        <div style={{ textAlign: 'center', marginTop: '52px' }}>
           <CTAButton label="ORDER NOW & SAVE 75%" size="lg" />
         </div>
       </div>
@@ -925,40 +1040,44 @@ function FAQSection() {
 }
 
 // ---------------------------------------------------------------------------
-// FOOTER — clean, consolidated
+// FOOTER — clean, professional
 // ---------------------------------------------------------------------------
 function Footer() {
   return (
-    <footer style={{ background: '#050505', borderTop: `1px solid ${C.border}`, padding: '48px 20px 28px' }}>
+    <footer style={{ background: '#1F2937', padding: '56px 20px 32px' }}>
       <div style={{ maxWidth: '860px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <img src={IMG('logo.png')} alt="CitrusBurn™" style={{ height: '34px', opacity: 0.65 }}
-            onError={(e) => imgError(e, 140, 34, 'CitrusBurn', '050505', '5a5a5a')} />
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img src={IMG('logo.png')} alt="CitrusBurn™"
+            style={{ height: '36px', filter: 'brightness(0) invert(1)', opacity: 0.8 }}
+            onError={(e) => imgFallback(e, 150, 36, 'CitrusBurn', '1F2937', '9CA3AF')} />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '20px',
-          flexWrap: 'wrap', marginBottom: '28px' }}>
+          flexWrap: 'wrap', marginBottom: '32px' }}>
           {['Terms','Privacy','Order Support','Returns & Refunds','Track My Order'].map((l) => (
-            <a key={l} href={AFFILIATE_LINK} style={{ color: '#4a4a4a', fontSize: '0.78rem' }}
+            <a key={l} href={AFFILIATE_LINK}
+              style={{ color: '#6B7280', fontSize: '0.8rem', transition: 'color .15s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#D1D5DB')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
               rel="nofollow noopener" target="_blank">{l}</a>
           ))}
         </div>
 
-        <div style={{ borderTop: `1px solid #1a1a1a`, paddingTop: '24px',
+        <div style={{ borderTop: '1px solid #374151', paddingTop: '28px',
           display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Three disclaimer paragraphs consolidated into one clean block */}
-          <p style={{ color: '#444', fontSize: '0.7rem', lineHeight: 1.8, textAlign: 'center', margin: 0 }}>
+          <p style={{ color: '#4B5563', fontSize: '0.7rem', lineHeight: 1.8, textAlign: 'center' }}>
             These statements have not been evaluated by the Food and Drug Administration.
             This product is not intended to diagnose, treat, cure, or prevent any disease.
-            Results may vary. The testimonials shown are from real customers; individual results are not guaranteed.
-            If you are pregnant, nursing, taking medication, or have a medical condition, consult your physician before use.
-            This site contains affiliate links and the publisher may receive compensation for purchases made through those links.
+            Results may vary. Individual testimonials are from real customers; results are not guaranteed.
+            If you are pregnant, nursing, taking medication, or have a medical condition, consult your physician
+            before use. This site may contain affiliate links and the publisher may receive compensation for
+            purchases made through those links.
           </p>
-          <p style={{ color: '#333', fontSize: '0.7rem', lineHeight: 1.7, textAlign: 'center', margin: 0 }}>
-            ClickBank® is a registered trademark of Click Sales, Inc. (1444 S. Entertainment Ave., Suite 410, Boise, ID 83709).
-            ClickBank&rsquo;s role as retailer does not constitute endorsement of these products.
+          <p style={{ color: '#374151', fontSize: '0.7rem', lineHeight: 1.7, textAlign: 'center' }}>
+            ClickBank® is a registered trademark of Click Sales, Inc. (1444 S. Entertainment Ave., Suite 410,
+            Boise, ID 83709). ClickBank&rsquo;s role as retailer does not constitute endorsement of these products.
           </p>
-          <p style={{ color: '#2a2a2a', fontSize: '0.68rem', textAlign: 'center', marginTop: '6px' }}>
+          <p style={{ color: '#374151', fontSize: '0.68rem', textAlign: 'center', marginTop: '8px' }}>
             Copyright &copy; {new Date().getFullYear()} CitrusBurn™. All Rights Reserved. Made in USA.
           </p>
         </div>
@@ -974,7 +1093,7 @@ export default function CitrusBurnReview() {
   return (
     <>
       <GlobalStyles />
-      <StickyOrderBar />
+      <StickyBar />
       <Nav />
       <main>
         <HeroSection />
