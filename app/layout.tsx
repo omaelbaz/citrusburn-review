@@ -68,7 +68,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#FF8C00" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body style={{ margin: 0, padding: 0, background: '#0a0a0a' }}>
+      <body style={{ margin: 0, padding: 0, background: '#F9FAFB', overflowX: 'hidden' }}>
         {children}
       </body>
     </html>

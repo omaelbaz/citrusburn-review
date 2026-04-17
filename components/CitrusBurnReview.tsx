@@ -53,11 +53,12 @@ const GlobalStyles = () => (
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; max-width: 100%; }
     body {
       background: #F9FAFB; color: #374151;
       font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased; line-height: 1.6;
+      overflow-x: hidden; max-width: 100%;
     }
     h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; color: #111827; line-height: 1.2; }
     a { text-decoration: none; }
@@ -121,7 +122,8 @@ const GlobalStyles = () => (
       letter-spacing: .04em; text-transform: uppercase;
       border: none; cursor: pointer; border-radius: 10px;
       transition: background .18s, transform .15s, box-shadow .15s;
-      text-align: center; white-space: nowrap;
+      text-align: center; white-space: normal;
+      word-break: break-word; max-width: 100%;
     }
     .btn-orange:hover  { background: #E07800; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,140,0,.35); }
     .btn-orange:active { transform: translateY(0); }
@@ -278,11 +280,28 @@ const GlobalStyles = () => (
     /* ─────────────── ANIMATIONS ─────────────── */
     @keyframes pulse-dot  { 0%,100%{opacity:1} 50%{opacity:.2} }
     @keyframes ticker     { 0%,100%{opacity:1} 50%{opacity:.45} }
-    @keyframes badge-pop  { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.05)} }
+    @keyframes badge-pop  { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.04)} }
     @keyframes float-in   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
     .pulse-dot    { animation: pulse-dot 1.2s ease-in-out infinite; }
     .ticker-blink { animation: ticker   1.5s ease-in-out infinite; }
+
+    /* Pricing card badge — constrained on mobile so it never overflows */
+    .pricing-badge {
+      position: absolute; top: -13px; left: 50%;
+      transform: translateX(-50%);
+      animation: badge-pop 2.5s ease-in-out infinite;
+      white-space: nowrap;
+    }
+    @media (max-width: 639px) {
+      .pricing-badge {
+        left: 0; right: 0; transform: none;
+        animation: none;
+        white-space: normal; text-align: center;
+        border-radius: 12px 12px 0 0;
+        top: -1px;
+      }
+    }
 
     /* ─────────────── SECTION DIVIDER ─────────────── */
     .divider {
@@ -329,8 +348,10 @@ function Tag({ children, color = C.orange }: { children: React.ReactNode; color?
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px',
       background: isOr ? '#FFF7ED' : '#F0FDF4',
       border: `1.5px solid ${isOr ? '#FDBA74' : '#86EFAC'}`,
-      borderRadius: '100px', padding: '5px 16px', marginBottom: '14px' }}>
-      <span style={{ color, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '.1em' }}>{children}</span>
+      borderRadius: '100px', padding: '5px 16px', marginBottom: '14px',
+      maxWidth: '100%', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <span style={{ color, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '.08em',
+        wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center' }}>{children}</span>
     </div>
   );
 }
@@ -544,12 +565,11 @@ function PricingCard({ label, bottles, duration, perBottle, total, originalTotal
   return (
     <div className={`pricing-card ${best ? 'pricing-card-best' : ''}`}>
       {best && (
-        <div style={{ position: 'absolute', top: '-13px', left: '50%',
-          background: C.orange, color: '#fff',
-          fontFamily: 'Montserrat,sans-serif', fontWeight: 800,
-          fontSize: '0.7rem', letterSpacing: '.1em',
-          padding: '5px 18px', borderRadius: '100px', whiteSpace: 'nowrap',
-          animation: 'badge-pop 2.5s ease-in-out infinite' }}>
+        <div className="pricing-badge"
+          style={{ background: C.orange, color: '#fff',
+            fontFamily: 'Montserrat,sans-serif', fontWeight: 800,
+            fontSize: '0.7rem', letterSpacing: '.08em',
+            padding: '5px 18px', borderRadius: '100px' }}>
           ⭐ BEST VALUE · MOST POPULAR ⭐
         </div>
       )}
@@ -1159,7 +1179,7 @@ export default function CitrusBurnReview() {
       <GlobalStyles />
       <StickyBar />
       <Nav />
-      <main>
+      <main style={{ overflowX: 'hidden', width: '100%' }}>
         <HeroSection />
         <UrgencyBanner />
         <PricingSection id="order" />
