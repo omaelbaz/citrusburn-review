@@ -107,6 +107,11 @@ const GlobalStyles = () => (
     /* hide less important text on small screens */
     @media (max-width: 479px)  { .sticky-extra { display: none; } .sticky-label { display: none; } }
     @media (max-width: 639px)  { .sticky-extra { display: none; } }
+    /* shrink timer font to 10px on very small screens so button doesn't overlap */
+    @media (max-width: 399px) {
+      .sticky-timer  { font-size: 0.625rem; }
+      .sticky-cta    { font-size: 0.6rem !important; padding: 5px 10px !important; }
+    }
 
     /* ─────────────── BUTTONS ─────────────── */
     .btn-orange {
@@ -166,11 +171,11 @@ const GlobalStyles = () => (
     .pricing-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 20px;
+      gap: 32px;
       margin-top: 16px;
     }
-    @media (min-width: 640px)  { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 1024px) { .pricing-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 640px)  { .pricing-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
+    @media (min-width: 1024px) { .pricing-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
 
     .pricing-card {
       background: #fff; border: 1.5px solid #E5E7EB;
@@ -209,13 +214,14 @@ const GlobalStyles = () => (
     .cert-badges {
       display: flex; gap: 10px; justify-content: center;
       align-items: center; flex-wrap: wrap;
+      width: 100%; margin: 0 auto;
     }
     .cert-badge {
       display: flex; align-items: center; gap: 6px;
       background: #fff; border: 1.5px solid #E5E7EB;
       border-radius: 100px; padding: 7px 14px;
       box-shadow: 0 1px 4px rgba(0,0,0,.04);
-      white-space: nowrap;
+      white-space: nowrap; flex-shrink: 0;
     }
     .cert-badge span.label {
       color: #374151; font-size: 0.75rem; font-weight: 600;
@@ -229,13 +235,14 @@ const GlobalStyles = () => (
     @media (min-width: 1024px) { .ingredient-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
 
     .ingredient-card {
-      background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px;
+      background: #fff; border: 1.5px solid #F3F4F6; border-radius: 16px;
       padding: 22px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.05);
       transition: border-color .2s, transform .2s, box-shadow .2s;
     }
     .ingredient-card:hover {
       border-color: #FF8C00; transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(255,140,0,.1);
+      box-shadow: 0 8px 28px rgba(255,140,0,.13);
     }
 
     /* ─────────────── TESTIMONIALS ─────────────── */
@@ -370,7 +377,9 @@ function StickyBar() {
           <span className="sticky-timer ticker-blink">{timer}</span>
           <span className="sticky-extra">· 🔥 Save 75% + Free Shipping on 6-Bottle Pack</span>
         </div>
-        <CTAButton label="CLAIM DEAL" pad="7px 18px" fs="0.78rem" />
+        <a href={AFFILIATE_LINK} className="btn-orange sticky-cta"
+          style={{ padding: '7px 14px', fontSize: '0.78rem', flexShrink: 0 }}
+          rel="nofollow noopener" target="_blank">CLAIM DEAL →</a>
       </div>
     </div>
   );
@@ -836,9 +845,9 @@ function ScienceSection() {
         </div>
 
         {/* Product intro — CENTERED */}
-        <div className="text-center">
+        <div className="text-center" style={{ width: '100%' }}>
           <h3 style={{ fontSize: 'clamp(1.4rem,4vw,1.8rem)', fontWeight: 900,
-            color: C.textDark, marginBottom: '14px' }}>
+            color: C.textDark, marginBottom: '14px', textAlign: 'center' }}>
             That&rsquo;s Why We Created CitrusBurn™
           </h3>
           <p style={{ color: C.textBody, maxWidth: '640px', margin: '0 auto 28px',
