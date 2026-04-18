@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Montserrat } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
 const inter = Inter({
@@ -87,6 +88,7 @@ export default function RootLayout({
       </head>
       <body style={{ margin: 0, padding: 0, background: '#F9FAFB', overflowX: 'hidden' }}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
